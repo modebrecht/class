@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Monats‑Klassenübersicht (14‑Tage‑Logik)</title>
+  <style>
+    :root { --bg:#0f172a; --panel:#111827; --text:#e5e7eb; --muted:#9ca3af; --border:#263043; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:radial-gradient(1200px 600px at 10% -20%,#1f2937 0%,var(--bg) 50%);color:var(--text);min-height:100vh;display:grid;place-items:center;padding:24px}
+    .card{width:min(820px,100%);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:22px;backdrop-filter:blur(6px)}
+    h1{margin:0 0 8px 0;letter-spacing:.4px;font-size:clamp(22px,3.2vw,30px)}
+    p.sub{margin:0 0 16px 0;color:var(--muted)}
+    .row{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+    label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+    select{width:100%;background:#0e1426;color:var(--text);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px 14px;font-size:16px;outline:none}
+    select:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.25)}
+    button{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:600;letter-spacing:.2px;cursor:pointer;transition:transform .06s ease,filter .2s ease;min-width:160px}
+    table{width:100%;border-collapse:separate;border-spacing:0;margin-top:16px;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
+    thead th{font-weight:700;text-align:left;padding:10px 12px;background:#0f1a33;border-bottom:1px solid var(--border)}
+    tbody td{padding:10px 12px;border-bottom:1px solid var(--border)}
+    tbody tr:last-child td{border-bottom:none}
+    .muted{color:var(--muted)}
+    @media (max-width:720px){.row{grid-template-columns:1fr}button{width:100%}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Monats‑Klassenübersicht</h1>
+    <p class="sub">Monat & Jahr wählen → Tabelle mit <strong>Datum</strong> & <strong>Klasse</strong>. (Basis: fixe Referenzen, dann jeweils <em>+14 Tage</em>.)</p>
+
+    <div class="row">
+      <div>
+        <label for="monthSel">Monat</label>
+        <select id="monthSel">
+          <option value="0">Januar</option>
+          <option value="1">Februar</option>
+          <option value="2">März</option>
+          <option value="3">April</option>
+          <option value="4">Mai</option>
+          <option value="5">Juni</option>
+          <option value="6">Juli</option>
+          <option value="7">August</option>
+          <option value="8">September</option>
+          <option value="9">Oktober</option>
+          <option value="10">November</option>
+          <option value="11">Dezember</option>
+        </select>
+      </div>
+      <div>
+        <label for="yearSel">Jahr</label>
+        <select id="yearSel"></select>
+      </div>
+      <div>
+        <button id="show" type="button">Tabelle anzeigen</button>
+      </div>
+    </div>
+
+    <table id="tbl" style="display:none">
+      <thead>
+        <tr>
+          <th style="width:180px">Datum</th>
+          <th>Klasse</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <p id="hint" class="sub" style="margin-top:12px"></p>
+  </div>
+
+  <script>
+    // --- SUPEREINFACH: 14‑Tage‑Logik auf Basis fester Referenzdaten ---
+    // Seeds (aus Screenshot/Absprachen):
+    //  • Di 02.09.2025 = B23_B  → dann alle 14 Tage B, sonst A
+    //  • Mi 03.09.2025 = B24_A  → dann alle 14 Tage A, sonst B
+    //  • Fr 29.08.2025 = E23b   → dann alle 14 Tage E23b, sonst „frei“
+
+    const SEED_TUE_B23_B = new Date('2025-09-02T00:00:00');
+    const SEED_WED_B24_A = new Date('2025-09-03T00:00:00');
+    const SEED_FRI_E23B  = new Date('2025-08-29T00:00:00');
+
+    const MS_DAY = 24*60*60*1000;
+    function atMidnight(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+    function daysBetween(a,b){ return Math.round((atMidnight(a)-atMidnight(b))/MS_DAY); }
+    function isEvery14From(date, seed){ return Math.abs(daysBetween(date, seed)) % 14 === 0; }
+
+    function fmt(date){ return date.toLocaleDateString('de-CH',{year:'numeric',month:'2-digit',day:'2-digit'}); }
+
+    function classesFor(date){
+      const js = date.getDay(); // 2=Di,3=Mi,5=Fr
+      const out=[];
+      if(js===2){
+        // Dienstag: nur B23 (A/B im 14‑Tage-Rhythmus)
+        out.push( isEvery14From(date, SEED_TUE_B23_B) ? 'B23_B' : 'B23_A' );
+      } else if(js===3){
+        // Mittwoch: maximal ZWEI Klassen → E23a (fix) + B24 (A/B). KEIN B23 am Mittwoch.
+        out.push('E23a');
+        out.push( isEvery14From(date, SEED_WED_B24_A) ? 'B24_A' : 'B24_B' );
+      } else if(js===5){
+        // Freitag: E23b alle 14 Tage, sonst frei
+        out.push( isEvery14From(date, SEED_FRI_E23B) ? 'E23b' : 'frei' );
+      }
+      return out;
+    }
+
+    function buildTable(year, monthIndex0){
+      const tbody=document.getElementById('tbody');
+      tbody.innerHTML='';
+      const first=new Date(year, monthIndex0, 1);
+      const next=new Date(year, monthIndex0+1, 1);
+      const rows=[];
+      for(let d=new Date(first); d<next; d.setDate(d.getDate()+1)){
+        const js=d.getDay();
+        if(js!==2 && js!==3 && js!==5) continue; // nur Di/Mi/Fr
+        const klass = classesFor(d);
+        for(const k of klass){ rows.push({ datum: fmt(d), klasse: k }); }
+      }
+      if(!rows.length){ document.getElementById('tbl').style.display='none'; return; }
+      for(const r of rows){
+        const tr=document.createElement('tr');
+        const td1=document.createElement('td'); td1.textContent=r.datum; tr.appendChild(td1);
+        const td2=document.createElement('td'); td2.textContent=r.klasse; tr.appendChild(td2);
+        tbody.appendChild(tr);
+      }
+      document.getElementById('tbl').style.display='table';
+    }
+
+    const $monthSel=document.getElementById('monthSel');
+    const $yearSel=document.getElementById('yearSel');
+    const $show=document.getElementById('show');
+    const $hint=document.getElementById('hint');
+
+    // Render-Funktion basierend auf aktueller Auswahl
+    function renderFromSelections(){
+      const year=parseInt($yearSel.value,10);
+      const month=parseInt($monthSel.value,10); // 0..11
+      if(Number.isNaN(year) || Number.isNaN(month)) return;
+      buildTable(year, month);
+      $hint.textContent = 'Regel: Di = B23 (A/B), Mi = E23a + B24 (A/B), Fr = E23b alle 14 Tage; sonst frei. Alles via fixen Referenzen → jeweils +14 Tage.';
+    }
+
+    // Dropdown-Änderungen lösen sofortiges Rendern aus
+    $monthSel.addEventListener('change', renderFromSelections);
+    $yearSel.addEventListener('change', renderFromSelections);
+
+    // Jahr-Dropdown füllen (aktuelles Jahr +/- 3)
+    (function fillYears(){
+      const now=new Date(); const cy=now.getFullYear();
+      const start=cy-3, end=cy+3;
+      for(let y=start; y<=end; y++){
+        const opt=document.createElement('option');
+        opt.value=String(y); opt.textContent=String(y);
+        if(y===cy) opt.selected=true;
+        $yearSel.appendChild(opt);
+      }
+    })();
+
+    $show.addEventListener('click',()=>{ renderFromSelections(); });
+
+    // Defaults: aktueller Monat/Jahr vorauswählen & anzeigen
+    (function init(){
+      const now=new Date();
+      $monthSel.value = String(now.getMonth());
+      $yearSel.value  = String(now.getFullYear());
+      renderFromSelections();
+    })();
+  </script>
+</body>
+</html>
