@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="clipBody">
+      <rect x="32" y="32" width="448" height="448" rx="54" ry="54"/>
+    </clipPath>
+  </defs>
+  <!-- body -->
+  <rect x="32" y="32" width="448" height="448" rx="54" ry="54" fill="#ffffff" stroke="#46474A" stroke-width="24"/>
+  <!-- header stripes clipped to body => rounded top corners -->
+  <g clip-path="url(#clipBody)">
+    <rect x="44" y="44" width="106" height="88" fill="#e31e24"/>
+    <rect x="150" y="44" width="106" height="88" fill="#ffd400"/>
+    <rect x="256" y="44" width="106" height="88" fill="#00833e"/>
+    <rect x="362" y="44" width="106" height="88" fill="#0055a4"/>
+  </g>
+  <!-- tabs -->
+  <rect x="160" y="60" width="56" height="60" rx="14" ry="14" fill="#ffffff" stroke="#46474A" stroke-width="12"/>
+  <rect x="296" y="60" width="56" height="60" rx="14" ry="14" fill="#ffffff" stroke="#46474A" stroke-width="12"/>
+  <!-- dots -->
+  <circle cx="128" cy="276" r="20" fill="#e31e24"/>
+  <circle cx="256" cy="276" r="20" fill="#00833e"/>
+  <circle cx="384" cy="276" r="20" fill="#0055a4"/>
+  <circle cx="128" cy="364" r="20" fill="#ffd400"/>
+  <circle cx="256" cy="364" r="20" fill="#e31e24"/>
+  <circle cx="384" cy="364" r="20" fill="#00833e"/>
+</svg>
