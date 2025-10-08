@@ -74,7 +74,7 @@
     // Seeds (aus Screenshot/Absprachen):
     //  • Di 02.09.2025 = B23_B  → dann alle 14 Tage B, sonst A
     //  • Mi 03.09.2025 = B24_A  → dann alle 14 Tage A, sonst B
-    //  • Fr 29.08.2025 = E23b   → dann alle 14 Tage E23b, sonst „frei“
+    //  • Fr 29.08.2025 = E23b   → dann alle 14 Tage E23b, sonst „WAH“
 
     const SEED_TUE_B23_B = new Date('2025-09-02T00:00:00');
     const SEED_WED_B24_A = new Date('2025-09-03T00:00:00');
@@ -98,8 +98,8 @@
         out.push('E23a');
         out.push( isEvery14From(date, SEED_WED_B24_A) ? 'B24_A' : 'B24_B' );
       } else if(js===5){
-        // Freitag: E23b alle 14 Tage, sonst frei
-        out.push( isEvery14From(date, SEED_FRI_E23B) ? 'E23b' : 'frei' );
+        // Freitag: E23b alle 14 Tage, sonst WAH
+        out.push( isEvery14From(date, SEED_FRI_E23B) ? 'E23b' : 'WAH' );
       }
       return out;
     }
@@ -137,7 +137,7 @@
       const month=parseInt($monthSel.value,10); // 0..11
       if(Number.isNaN(year) || Number.isNaN(month)) return;
       buildTable(year, month);
-      $hint.textContent = 'Regel: Di = B23 (A/B), Mi = E23a + B24 (A/B), Fr = E23b alle 14 Tage; sonst frei. Alles via fixen Referenzen → jeweils +14 Tage.';
+      $hint.textContent = 'Regel: Di = B23 (A/B), Mi = E23a + B24 (A/B), Fr = E23b alle 14 Tage; sonst WAH. Alles via fixen Referenzen → jeweils +14 Tage.';
     }
 
     // Dropdown-Änderungen lösen sofortiges Rendern aus
