@@ -11,7 +11,7 @@
     .card{width:min(820px,100%);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:22px;backdrop-filter:blur(6px)}
     h1{margin:0 0 8px 0;letter-spacing:.4px;font-size:clamp(22px,3.2vw,30px)}
     p.sub{margin:0 0 16px 0;color:var(--muted)}
-    .row{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end}
     label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
     select{width:100%;background:#0e1426;color:var(--text);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px 14px;font-size:16px;outline:none}
     select:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.25)}
@@ -50,6 +50,17 @@
       <div>
         <label for="yearSel">Jahr</label>
         <select id="yearSel"></select>
+      </div>
+      <div>
+        <label for="dayFilter">Wochentag</label>
+        <select id="dayFilter">
+          <option value="">Alle Wochentage</option>
+          <option value="1">Montag</option>
+          <option value="2">Dienstag</option>
+          <option value="3">Mittwoch</option>
+          <option value="4">Donnerstag</option>
+          <option value="5">Freitag</option>
+        </select>
       </div>
       <div>
         <button id="show" type="button">Tabelle anzeigen</button>
@@ -114,11 +125,11 @@
         const js=d.getDay();
         if(js!==2 && js!==3 && js!==5) continue; // nur Di/Mi/Fr
         const klass = classesFor(d);
-        for(const k of klass){ rows.push({ datum: fmt(d), klasse: k }); }
+        for(const k of klass){ rows.push({ datum: fmt(d), klasse: k, dow: js }); }
       }
       if(!rows.length){ document.getElementById('tbl').style.display='none'; return; }
       for(const r of rows){
-        const tr=document.createElement('tr');
+        const tr=document.createElement('tr'); tr.dataset.dow=String(r.dow);
         const td1=document.createElement('td'); td1.textContent=r.datum; tr.appendChild(td1);
         const td2=document.createElement('td'); td2.textContent=r.klasse; tr.appendChild(td2);
         tbody.appendChild(tr);
@@ -128,8 +139,19 @@
 
     const $monthSel=document.getElementById('monthSel');
     const $yearSel=document.getElementById('yearSel');
+    const $dayFilter=document.getElementById('dayFilter');
     const $show=document.getElementById('show');
     const $hint=document.getElementById('hint');
+
+    function applyDayFilter(){
+      const val = $dayFilter.value;
+      const trs = document.querySelectorAll('#tbody tr');
+      trs.forEach(tr => {
+        tr.style.display = (val === '' || tr.dataset.dow === val) ? '' : 'none';
+      });
+    }
+
+    $dayFilter && $dayFilter.addEventListener('change', applyDayFilter);
 
     // Render-Funktion basierend auf aktueller Auswahl
     function renderFromSelections(){
@@ -137,6 +159,7 @@
       const month=parseInt($monthSel.value,10); // 0..11
       if(Number.isNaN(year) || Number.isNaN(month)) return;
       buildTable(year, month);
+      applyDayFilter();
       $hint.textContent = 'Regel: Di = B23 (A/B), Mi = E23a + B24 (A/B), Fr = E23b alle 14 Tage; sonst WAH. Alles via fixen Referenzen → jeweils +14 Tage.';
     }
 
